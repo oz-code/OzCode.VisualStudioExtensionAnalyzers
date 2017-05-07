@@ -23,7 +23,6 @@ namespace MefImportExceptionAnalyzer
     {
         private const string title = "Add try.. catch inside";
 
-        private const string ERROR_NOTIFICATION_NAMESPACE = "DebuggerShared.Services.ErrorNotification";
         private const string SYSTEM_NAMESPACE = "System";
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
@@ -70,7 +69,6 @@ namespace MefImportExceptionAnalyzer
 
             if (diagnostics.Any(d => d.Id == MefImportExceptionAnalyzerAnalyzer.DiagnosticId))
             {
-                root = AddNamespaceIfMissing(root, ERROR_NOTIFICATION_NAMESPACE);
                 root = AddNamespaceIfMissing(root, SYSTEM_NAMESPACE);
             }
 
