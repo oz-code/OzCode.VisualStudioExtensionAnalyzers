@@ -162,9 +162,10 @@ namespace MefImportExceptionAnalyzer
                                                                     SeparatedList<ArgumentSyntax>(
                                                                         new SyntaxNodeOrToken[]{
                                                                 Argument(
-                                                                    LiteralExpression(
-                                                                        SyntaxKind.StringLiteralExpression,
-                                                                        Literal("Erorr in MEF ctor"))),
+                                                                    MemberAccessExpression(
+                                                        SyntaxKind.SimpleMemberAccessExpression,
+                                                        IdentifierName("e"),
+                                                        IdentifierName("Message"))),
                                                                 Token(SyntaxKind.CommaToken),
                                                                 Argument(
                                                                     IdentifierName("e"))})))))))))
