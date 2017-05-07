@@ -20,13 +20,25 @@ namespace MefImportExceptionAnalyzer
         private static readonly LocalizableString Description = "All MEF ImportingConstructor should have a try..catch on entire content.";
         private const string Category = "MEF";
 
+        private DiagnosticImplementingVisualStudio _diagnosticImplementingVisualStudio;
+
         private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Error, isEnabledByDefault: true, description: Description);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
 
+        public MefImportExceptionAnalyzerAnalyzer()
+        {
+            _diagnosticImplementingVisualStudio = new DiagnosticImplementingVisualStudio();
+        }
+
         public override void Initialize(AnalysisContext context)
         {
-            context.RegisterSyntaxNodeAction(AnalyzeConstructor, ImmutableArray.Create(SyntaxKind.ConstructorDeclaration));
+            context.RegisterSyntaxNodeAction(
+                AnalyzeConstructor, ImmutableArray.Create(SyntaxKind.ConstructorDeclaration));
+
+            //Methods implementing interface starting with Microsoft.VisualStudio.XXXX
+            context.RegisterSyntaxNodeAction(
+                _diagnosticImplementingVisualStudio.Analyze, ImmutableArray.Create(SyntaxKind.ClassDeclaration));
         }
 
         private void AnalyzeConstructor(SyntaxNodeAnalysisContext context)
@@ -48,32 +60,19 @@ namespace MefImportExceptionAnalyzer
             if (!isAttributeExists)
                 return false;
 
-            bool isWhiteSpaceOnly = IsWhiteSpaceOnly(ctor);
+            bool isWhiteSpaceOnly = DiagnosticCommon.IsWhiteSpaceOnly(ctor);
             if (isWhiteSpaceOnly)
                 return false;
 
 
-            bool tryCatchOnAllExists = IsTryCatchStatementOnly(ctor);
+            bool tryCatchOnAllExists = DiagnosticCommon.IsTryCatchStatementOnly(ctor);
             if (tryCatchOnAllExists)
                 return false;
 
             return true;
         }
 
-
-        private static bool IsTryCatchStatementOnly(ConstructorDeclarationSyntax ctor)
-        {
-            var statements = ctor.Body.Statements;
-            return statements.Count == 1
-                && statements[0] is TryStatementSyntax;
-        }
-
-        private static bool IsWhiteSpaceOnly(ConstructorDeclarationSyntax ctor)
-        {
-            return ctor.Body.Statements.Count == 0;
-        }
-
-        private static bool IsImportingAttributeExists(ConstructorDeclarationSyntax ctor)
+        private static bool IsImportingAttributeExists(BaseMethodDeclarationSyntax ctor)
         {
             var attrs = ctor.AttributeLists.SelectMany(list => list.Attributes);
             return attrs.Any(attr => attr.Name.ToString() == "ImportingConstructor");

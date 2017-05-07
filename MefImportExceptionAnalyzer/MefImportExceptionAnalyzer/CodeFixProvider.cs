@@ -44,10 +44,12 @@ namespace MefImportExceptionAnalyzer
             var diagnosticSpan = diagnostic.Location.SourceSpan;
 
             var initialToken = root.FindToken(diagnosticSpan.Start);
-            var ctor = FindAncestorOfType<ConstructorDeclarationSyntax>(initialToken.Parent);
+            var ctor = FindAncestorOfType<BaseMethodDeclarationSyntax>(initialToken.Parent);
+
+
 
             context.RegisterCodeFix(
-                CodeAction.Create(title, c=> ChangeBlock(context.Document, ctor, c), equivalenceKey: title),
+                CodeAction.Create(title, c=> ChangeBlock(context.Document, ctor, c, context.Diagnostics), equivalenceKey: title),
                 diagnostic);
         }
 
@@ -60,12 +62,17 @@ namespace MefImportExceptionAnalyzer
             return FindAncestorOfType<T>(node.Parent);
         }
 
-        private async Task<Document> ChangeBlock(Document document, ConstructorDeclarationSyntax originalCtor, CancellationToken c)
+        private async Task<Document> ChangeBlock(Document document, BaseMethodDeclarationSyntax originalCtor, CancellationToken c,
+            IEnumerable<Diagnostic> diagnostics)
         {
-            ConstructorDeclarationSyntax newCtor = CreateConstructorWithTryCatch(originalCtor);
-            var root = await GetRootWithNormalizedConstructor(document, originalCtor, newCtor).ConfigureAwait(false);
-            root = AddNamespaceIfMissing(root, ERROR_NOTIFICATION_NAMESPACE);
-            root = AddNamespaceIfMissing(root, SYSTEM_NAMESPACE);
+            var root = await GetRootWithNormalizedConstructor(document, originalCtor).ConfigureAwait(false);
+
+
+            if (diagnostics.Any(d => d.Id == MefImportExceptionAnalyzerAnalyzer.DiagnosticId))
+            {
+                root = AddNamespaceIfMissing(root, ERROR_NOTIFICATION_NAMESPACE);
+                root = AddNamespaceIfMissing(root, SYSTEM_NAMESPACE);
+            }
 
             return document.WithSyntaxRoot(root);
         }
@@ -87,87 +94,73 @@ namespace MefImportExceptionAnalyzer
             return root;
         }
 
-        private static async Task<CompilationUnitSyntax> GetRootWithNormalizedConstructor(Document document, ConstructorDeclarationSyntax originalCtor, ConstructorDeclarationSyntax newCtor)
+        private static async Task<CompilationUnitSyntax> GetRootWithNormalizedConstructor(Document document, BaseMethodDeclarationSyntax originalCtor)
         {
             var tree = await document.GetSyntaxTreeAsync().ConfigureAwait(false);
             CompilationUnitSyntax root = await tree.GetRootAsync() as CompilationUnitSyntax;
 
-            root = root.ReplaceNode(originalCtor, newCtor);
+            var annotation = new SyntaxAnnotation();
+
+            root = root.ReplaceNode(originalCtor, originalCtor.WithAdditionalAnnotations(annotation));
+            var ctorWithAnnotation = root.GetAnnotatedNodes(annotation).Single() as BaseMethodDeclarationSyntax;
+
+            BaseMethodDeclarationSyntax newCtor = ctorWithAnnotation is ConstructorDeclarationSyntax ? 
+                CreateConstructorWithTryCatch(ctorWithAnnotation as ConstructorDeclarationSyntax)
+                : CreateConstructorWithTryCatch(ctorWithAnnotation as MethodDeclarationSyntax);
+
+
+            root = root.ReplaceNode(ctorWithAnnotation, newCtor);
             var entirelyNormalizedRoot = root.NormalizeWhitespace();
-            ConstructorDeclarationSyntax ctorInEntirelyNormalized = FindSpecificConstructor(originalCtor.ParameterList, originalCtor.Identifier.Text, entirelyNormalizedRoot);
+            BaseMethodDeclarationSyntax ctorInEntirelyNormalized = entirelyNormalizedRoot.GetAnnotatedNodes(annotation).Single() as BaseMethodDeclarationSyntax;
 
-            var ctorInOrig2 = FindSpecificConstructor(originalCtor.ParameterList, originalCtor.Identifier.Text, root);
-
-            ctorInEntirelyNormalized = ctorInEntirelyNormalized.WithParameterList(originalCtor.ParameterList);
-            ctorInEntirelyNormalized = ctorInEntirelyNormalized.WithAttributeLists(originalCtor.AttributeLists);
+            var ctorInOrig2 = root.GetAnnotatedNodes(annotation).Single() as BaseMethodDeclarationSyntax;
 
             var newRoot = root.ReplaceNode(ctorInOrig2, ctorInEntirelyNormalized);
 
             return newRoot;
         }
-
-        private static ConstructorDeclarationSyntax FindSpecificConstructor(ParameterListSyntax paramList, string identifierText, CompilationUnitSyntax parentNode)
-        {
-            var res = parentNode.DescendantNodes().
-                OfType<ConstructorDeclarationSyntax>().SingleOrDefault(c => c.Identifier.Text == identifierText
-                        && IsParamListEqual(c.ParameterList, paramList)
-                        && !c.Modifiers.Any(x => x.IsKind(SyntaxKind.StaticKeyword)));
-
-            if (res == null)
-
-                Debugger.Break();
-
-
-            return res;
-        }
-
-        private static bool IsParamListEqual(ParameterListSyntax paramsA, ParameterListSyntax paramsB)
-
-        {
-            if (paramsA == null || paramsB == null)
-                return false;
-            var parametersA = paramsA.Parameters;
-            var parametersB = paramsB.Parameters;
-            if (parametersA == null || parametersB == null || parametersA.Count != parametersB.Count)
-                return false;
-            for (int i = 0; i < parametersA.Count; i++)
-            {
-                var a = Regex.Replace(parametersA[i].ToString(), @"\s+", "");
-                var b = Regex.Replace(parametersB[i].ToString(), @"\s+", "");
-                if (a != b)
-                    return false;
-            }
-            return true;
-        }
-
-        private static ConstructorDeclarationSyntax CreateConstructorWithTryCatch(ConstructorDeclarationSyntax originalCtor)
+        
+        private static BaseMethodDeclarationSyntax CreateConstructorWithTryCatch(ConstructorDeclarationSyntax originalCtor)
         {
             var originalBlock = originalCtor.Body;
 
-            var newCtor = originalCtor.WithBody(
-                    Block(
+            var newCtor = originalCtor.WithBody(ConstructBlockWithTryCatch(originalBlock)).NormalizeWhitespace();
 
-                        TryStatement(
-                            SingletonList<CatchClauseSyntax>(
-                                CatchClause()
-                                .WithDeclaration(
-                                    CatchDeclaration(
-                                        IdentifierName("Exception"))
-                                    .WithIdentifier(
-                                        Identifier("e")))
-                                .WithBlock(
-                                    Block(
-                                        SingletonList<StatementSyntax>(
-                                            ExpressionStatement(
-                                                InvocationExpression(
-                                                    MemberAccessExpression(
-                                                        SyntaxKind.SimpleMemberAccessExpression,
-                                                        IdentifierName("ErrorNotificationLogger"),
-                                                        IdentifierName("LogErrorWithoutShowingErrorNotificationUI")))
-                                                .WithArgumentList(
-                                                    ArgumentList(
-                                                        SeparatedList<ArgumentSyntax>(
-                                                            new SyntaxNodeOrToken[]{
+
+            return newCtor;
+        }
+
+        private static BaseMethodDeclarationSyntax CreateConstructorWithTryCatch(MethodDeclarationSyntax method)
+        {
+            var originalBlock = method.Body;
+            return method.WithBody(ConstructBlockWithTryCatch(originalBlock)).NormalizeWhitespace();
+        }
+
+        private static BlockSyntax ConstructBlockWithTryCatch(BlockSyntax originalBlock)
+        {
+            return Block(
+
+                                    TryStatement(
+                                        SingletonList<CatchClauseSyntax>(
+                                            CatchClause()
+                                            .WithDeclaration(
+                                                CatchDeclaration(
+                                                    IdentifierName("Exception"))
+                                                .WithIdentifier(
+                                                    Identifier("e")))
+                                            .WithBlock(
+                                                Block(
+                                                    SingletonList<StatementSyntax>(
+                                                        ExpressionStatement(
+                                                            InvocationExpression(
+                                                                MemberAccessExpression(
+                                                                    SyntaxKind.SimpleMemberAccessExpression,
+                                                                    IdentifierName("ErrorNotificationLogger"),
+                                                                    IdentifierName("LogErrorWithoutShowingErrorNotificationUI")))
+                                                            .WithArgumentList(
+                                                                ArgumentList(
+                                                                    SeparatedList<ArgumentSyntax>(
+                                                                        new SyntaxNodeOrToken[]{
                                                                 Argument(
                                                                     LiteralExpression(
                                                                         SyntaxKind.StringLiteralExpression,
@@ -175,11 +168,7 @@ namespace MefImportExceptionAnalyzer
                                                                 Token(SyntaxKind.CommaToken),
                                                                 Argument(
                                                                     IdentifierName("e"))})))))))))
-                        .WithBlock(originalBlock))).NormalizeWhitespace();
-
-
-            return newCtor;
+                                    .WithBlock(originalBlock));
         }
-
     }
 }
