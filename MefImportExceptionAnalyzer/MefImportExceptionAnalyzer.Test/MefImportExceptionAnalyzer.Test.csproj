@@ -102,9 +102,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MefImportExceptionAnalyzer\MefImportExceptionAnalyzer.csproj">
+    <ProjectReference Include="..\MefImportExceptionAnalyzer\OzCode.Analyzers.AddTryCatchAnalyzer.csproj">
       <Project>{5C289E86-3636-4AC4-BA49-033775A513A5}</Project>
-      <Name>MefImportExceptionAnalyzer</Name>
+      <Name>OzCode.Analyzers.AddTryCatchAnalyzer</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

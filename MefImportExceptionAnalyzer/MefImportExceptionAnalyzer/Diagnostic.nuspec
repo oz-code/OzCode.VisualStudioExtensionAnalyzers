@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>OzCode.Analyzers.AddTryCatchAnalyzer</id>
-    <version>1.3.0.0</version>
+    <version>1.5.0.0</version>
     <title>OzCode.Analyzers.AddTryCatchAnalyzer</title>
     <authors>Michael Shpilt, Omer Raviv</authors>
     <owners>Michael Shpilt, Omer Raviv</owners>

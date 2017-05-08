@@ -73,9 +73,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MefImportExceptionAnalyzer\MefImportExceptionAnalyzer.csproj">
+    <ProjectReference Include="..\MefImportExceptionAnalyzer\OzCode.Analyzers.AddTryCatchAnalyzer.csproj">
       <Project>{5C289E86-3636-4AC4-BA49-033775A513A5}</Project>
-      <Name>MefImportExceptionAnalyzer</Name>
+      <Name>OzCode.Analyzers.AddTryCatchAnalyzer</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

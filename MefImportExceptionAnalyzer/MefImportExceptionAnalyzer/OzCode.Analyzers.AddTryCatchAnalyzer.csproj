@@ -10,8 +10,8 @@
     <ProjectGuid>{5C289E86-3636-4AC4-BA49-033775A513A5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MefImportExceptionAnalyzer</RootNamespace>
-    <AssemblyName>MefImportExceptionAnalyzer</AssemblyName>
+    <RootNamespace>OzCode.Analyzers.AddTryCatchAnalyzer</RootNamespace>
+    <AssemblyName>OzCode.Analyzers.AddTryCatchAnalyzer</AssemblyName>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <TargetFrameworkProfile>Profile7</TargetFrameworkProfile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
