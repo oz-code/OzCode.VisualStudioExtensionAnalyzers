@@ -1,17 +1,18 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <id>MefImportExceptionAnalyzer</id>
-    <version>1.0.0.0</version>
-    <title>MefImportExceptionAnalyzer</title>
-    <authors>CV</authors>
-    <owners>CV</owners>
-    <licenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</licenseUrl>
-    <projectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</projectUrl>
-    <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>
+    <id>OzCode.Analyzers.AddTryCatchAnalyzer</id>
+    <version>1.3.0.0</version>
+    <title>OzCode.Analyzers.AddTryCatchAnalyzer</title>
+    <authors>Michael Shpilt, Omer Raviv</authors>
+    <owners>Michael Shpilt, Omer Raviv</owners>
+    <projectUrl>https://github.com/oz-code/OzCode.VisualStudioExtensionAnalyzers</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>MefImportExceptionAnalyzer</description>
-    <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
+    <description>
+      Adds try..catch and Logger.Log() inside methods and constructors that will have dire effects if an exception occurs inside.
+      This includes: 1) MEF importing constructors 2) Methods implementing Visual Studio interfaces (Starting with Microsoft.VisualStudio namespace)
+    </description>
+    <releaseNotes></releaseNotes>
     <copyright>Copyright</copyright>
     <tags>MefImportExceptionAnalyzer, analyzers</tags>
     <frameworkAssemblies>
