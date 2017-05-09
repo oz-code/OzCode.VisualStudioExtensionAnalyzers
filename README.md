@@ -2,7 +2,7 @@
 A collection of Roslyn Analyzers that help in creating Visual Studio extensions.
 
 
-*Add try..catch*
+## Add try..catch in to report exceptions to telemetry in critical paths
 This analyzer is meant to help Visual Studio extension authors make sure important exceptions are caught and properly reported to telemetry (i.e. an exception monitoring tool such as Raygun, Exceptionless, Application Insights, etc).
 The analyzer adds a try..catch block and and a call Logger.LogException() in methods and constructors where there will dire consequences if an exception is thrown within.
 This includes:
