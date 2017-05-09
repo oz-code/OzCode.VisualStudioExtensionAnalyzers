@@ -8,4 +8,4 @@ The analyzer adds a try..catch block and and a call Logger.LogException() in met
 This includes:
 1) MEF ImportingConstructors, where an unhandled exception may prevent your extension from being properly MEF-composed and initialized.
 2) Callbacks which implement Visual Studio SDK interfaces (e.g. IWpfTextViewCreationListener, or any interface defined under Microsoft.VisualStudio.X namespace), where an unhandled exception may pop up an annoying and cryptic MessageBox, which says "An exception has been encountered. This may be caused by an exception."
-
+![Screenshot](VisualStudioTryCatchAnalyzer.png?raw=true "Title")
