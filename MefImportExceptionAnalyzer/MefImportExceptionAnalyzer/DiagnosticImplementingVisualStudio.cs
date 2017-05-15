@@ -48,30 +48,29 @@ namespace MefImportExceptionAnalyzer
 
             
 
-            var methods = classSymbol.GetMembers().ToList();
+            var methods = classSymbol.GetMembers().OfType<IMethodSymbol>()
+                .Where (m => m.MethodKind.ToString() == "Ordinary")
+                .ToList();
 
             foreach (var methodSymbol in methods)
             {
 
-                if (!(methodSymbol is IMethodSymbol methodSymbol2))
-                    continue;
-
-                bool isWhiteSpaceOnly = DiagnosticCommon.IsWhiteSpaceOnly(FindSyntax(@class, methodSymbol2));
+                bool isWhiteSpaceOnly = DiagnosticCommon.IsWhiteSpaceOnly(FindSyntax(@class, methodSymbol));
                 if (isWhiteSpaceOnly)
                     continue;
 
 
-                bool tryCatchOnAllExists = DiagnosticCommon.IsTryCatchStatementOnly(FindSyntax(@class, methodSymbol2));
+                bool tryCatchOnAllExists = DiagnosticCommon.IsTryCatchStatementOnly(FindSyntax(@class, methodSymbol));
                 if (tryCatchOnAllExists)
                     continue;
 
                 bool implementsInterface = relevantInterfaces
                  .SelectMany(@interface => @interface.GetMembers().OfType<IMethodSymbol>())
-                 .Any(method => methodSymbol2.Equals(methodSymbol2.ContainingType.FindImplementationForInterfaceMember(method)));
+                 .Any(method => methodSymbol.Equals(methodSymbol.ContainingType.FindImplementationForInterfaceMember(method)));
 
                 if (implementsInterface)
                 {
-                    var diag = Diagnostic.Create(Rule, methodSymbol2.Locations.First());
+                    var diag = Diagnostic.Create(Rule, methodSymbol.Locations.First());
                     _context.ReportDiagnostic(diag);
                 }
             }

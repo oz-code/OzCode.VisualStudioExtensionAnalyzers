@@ -45,11 +45,12 @@ namespace MefImportExceptionAnalyzer
             var initialToken = root.FindToken(diagnosticSpan.Start);
             var ctor = FindAncestorOfType<BaseMethodDeclarationSyntax>(initialToken.Parent);
 
-
-
-            context.RegisterCodeFix(
-                CodeAction.Create(title, c=> ChangeBlock(context.Document, ctor, c, context.Diagnostics), equivalenceKey: title),
-                diagnostic);
+            if (ctor != null)
+            {
+                context.RegisterCodeFix(
+                    CodeAction.Create(title, c => ChangeBlock(context.Document, ctor, c, context.Diagnostics), equivalenceKey: title),
+                    diagnostic);
+            }
         }
 
         private T FindAncestorOfType<T>(SyntaxNode node) where T : SyntaxNode
